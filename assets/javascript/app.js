@@ -1,75 +1,65 @@
 // API key L9qMY9FXXoafABq4TXgNSGMfp9GLLoF8
 
-// Important query perameters
-// q (query)
-// limit
-// rating
+$(function () {
+    renderButtons(gifArr, 'searchBtn', '#gifButtons');
+})
 
-// Create array of topics to search for
+var gifArr = ["beer", "pizza", "dogs", "burritos"];
 
-var gifSearch = ["beer", "pizza", "dogs", "cats", "burrito"];
-
-
-// TO DO: add dynamic search and remove static placeholder array element
-var queryURL = "https://api.giphy.com/v1/gifs/search?api_key=L9qMY9FXXoafABq4TXgNSGMfp9GLLoF8&q=" + gifSearch[0] + "&limit=10&rating=g";
-
-function renderButtons() {
-    // Loop through the array of topics
-    for (var i = 0; i < gifSearch.length; i++) {
-
-        // Create button
-        var gifBtn = $("<button>");
-
-        // Add a class
-        gifBtn.addClass("gif-tastic btn btn-primary btn-lg");
-
-        // Add a type
-        gifBtn.attr("type", "button");
-
-        // Adding a data-attribute with a value of the movie at index i
-        gifBtn.attr("data-name", gifSearch[i]);
-
-        // Providing the button's text with a value of the movie at index i
-        gifBtn.text(gifSearch[i]);
-
-        // Adding the button to the HTML
-        $("#gif-buttons").append(gifBtn);
+function renderButtons(gifArr, classToAdd, destination) {
+    $(destination).empty();
+    for (var i = 0; i < gifArr.length; i++) {
+        var a = $("<button>");
+        a.addClass(classToAdd).addClass("btn btn-primary mr-2");
+        a.attr("data-type", gifArr[i]);
+        a.text(gifArr[i]);
+        $(destination).append(a);
     }
 }
 
-$.ajax({
-    url: queryURL,
-    method: "GET"
-}).then(function (response) {
-    console.log(response);
+$(document).on('click', '.searchBtn', function () {
+    var type = $(this).data('type');
+    var queryURL = "https://api.giphy.com/v1/gifs/search?q=" +
+        type + "&api_key=L9qMY9FXXoafABq4TXgNSGMfp9GLLoF8&limit=10&rating=g";
+    $.ajax({
+            url: queryURL,
+            method: "GET"
+        })
+        .done(function (response) {
+            for (var j = 0; j < response.data.length; j++) {
+                var searchDiv = $('<div class="search-item">');
+                var rating = response.data[j].rating;
+                var p = $("<p>").text("Rating: " + rating);
+                var animated = response.data[j].images.fixed_height.url;
+                var still = response.data[j].images.fixed_height_still.url;
+                var image = $('<img>');
+                image.attr('src', still);
+                image.attr('data-still', still);
+                image.attr('data-animated', animated);
+                image.attr('data-state', 'still');
+                image.addClass('searchImage');
+                searchDiv.append(p);
+                searchDiv.append(image);
+                $("#searches").prepend(searchDiv);
+            }
+        })
+})
 
-    // dump the JSON contents
-     $("#gif-container").text(JSON.stringify(response)).addClass("monospace");
-
-
-    // Trying to get to the image URL. Can't seem to find it. None of these work.
-    // var gifURL = response.data.images.original.url;
-    // var gifURL = response.data.images[17].url;
-    // var gifURL = response.data.images.url;
-    // var gifURL = response.url;
-    var gifURL = "https://media.giphy.com/media/JxlrNZzprrRhm/giphy.gif";
-    console.log(gifURL);
-
-    for (var i = 0; i < gifSearch.length; i++) {
-
-        // Create image for the gif
-        var gifImg = $("<img>");
-
-        // Add a type
-        gifImg.attr("src", gifURL);
-
-        // Adding the gifs to the HTML
-        $("#gif-container").append(gifURL);
+$(document).on('click', '.searchImage', function () {
+    var state = $(this).attr('data-state');
+    if (state == 'still') {
+        $(this).attr('src', $(this).data('animated'));
+        $(this).attr('data-state', 'animated');
+    } else {
+        $(this).attr('src', $(this).data('still'));
+        $(this).attr('data-state', 'still');
     }
-});
+})
 
-// IGNORE EARLY TESTING
-// Doesn't empty the gif-container, but it seems like it should?
-// function renderButtons() {
-//     $("#gif-container").empty();
-// }
+
+$('#addBtn').on('click', function () {
+    var newSearch = $('input').eq(0).val();
+    gifArr.push(newSearch);
+    renderButtons(gifArr, 'searchBtn', '#gifButtons');
+    return false;
+})
