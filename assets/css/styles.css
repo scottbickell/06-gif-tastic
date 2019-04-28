@@ -5,3 +5,8 @@
 .monospace {
     font-family: monospace;
 }
+
+.search-item {
+    float: left;
+    margin: 0 10px 10px 0;
+}
